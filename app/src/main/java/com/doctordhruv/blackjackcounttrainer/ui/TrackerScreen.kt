@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -21,7 +21,6 @@ import com.doctordhruv.blackjackcounttrainer.model.Card
 
 @Composable
 fun TrackerScreen(
-    decks: Int,
     runningCount: Int,
     trueCount: Double,
     cardsSeen: Int,
@@ -29,6 +28,8 @@ fun TrackerScreen(
     decksRemaining: Double,
     playerCards: List<Card>,
     dealerCards: List<Card>,
+    selectedTarget: CardTarget,
+    onTargetChanged: (CardTarget) -> Unit,
     onCardSelected: (Card) -> Unit,
     onEndHand: () -> Unit,
     onClearHand: () -> Unit,
@@ -36,8 +37,7 @@ fun TrackerScreen(
 ) {
 
     Column(
-        modifier = Modifier
-            .padding(16.dp)
+        modifier = Modifier.padding(16.dp)
     ) {
 
         Text("BLACKJACK COUNT TRAINER")
@@ -62,7 +62,41 @@ fun TrackerScreen(
 
         CardRow(dealerCards)
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+
+            Button(
+                onClick = {
+                    onTargetChanged(CardTarget.PLAYER)
+                }
+            ) {
+                Text(
+                    if (selectedTarget == CardTarget.PLAYER)
+                        "✓ PLAYER"
+                    else
+                        "PLAYER"
+                )
+            }
+
+            Button(
+                onClick = {
+                    onTargetChanged(CardTarget.DEALER)
+                }
+            ) {
+                Text(
+                    if (selectedTarget == CardTarget.DEALER)
+                        "✓ DEALER"
+                    else
+                        "DEALER"
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text("SELECT CARD")
 
@@ -113,6 +147,7 @@ private fun CardGrid(
     Column {
 
         Card.entries.toList().chunked(5).forEach { rowCards ->
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -124,8 +159,7 @@ private fun CardGrid(
                         onClick = {
                             onCardSelected(card)
                         },
-                        modifier = Modifier
-                            .width(62.dp)
+                        modifier = Modifier.width(62.dp)
                     ) {
                         Text(card.label)
                     }
