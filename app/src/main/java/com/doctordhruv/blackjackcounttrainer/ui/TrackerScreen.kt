@@ -112,8 +112,7 @@ private fun CardGrid(
 
     Column {
 
-        Card.chunked(5).forEach { rowCards ->
-
+        Card.entries.toList().chunked(5).forEach { rowCards ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
