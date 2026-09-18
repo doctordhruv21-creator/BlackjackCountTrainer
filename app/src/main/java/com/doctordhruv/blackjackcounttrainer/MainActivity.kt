@@ -9,14 +9,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,7 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.doctordhruv.blackjackcounttrainer.engine.CountingEngine
+import com.doctordhruv.blackjackcounttrainer.engine.CountState
 import com.doctordhruv.blackjackcounttrainer.model.Card
+import com.doctordhruv.blackjackcounttrainer.ui.CardTarget
 import com.doctordhruv.blackjackcounttrainer.ui.TrackerScreen
 
 class MainActivity : ComponentActivity() {
@@ -39,9 +42,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@androidx.compose.runtime.Composable
+@Composable
 fun BlackjackCountTrainerApp() {
 
+    val engine = remember {
+        CountingEngine()
+    }
+
+    /*
+     * IMPORTANT:
+     * No deck count is selected by default.
+     */
     var selectedDecks by remember {
         mutableStateOf<Int?>(null)
     }
@@ -51,7 +62,7 @@ fun BlackjackCountTrainerApp() {
     }
 
     var countState by remember {
-        mutableStateOf(CountingEngine().createNewShoe(1))
+        mutableStateOf<CountState?>(null)
     }
 
     var playerCards by remember {
@@ -62,8 +73,8 @@ fun BlackjackCountTrainerApp() {
         mutableStateOf<List<Card>>(emptyList())
     }
 
-    val engine = remember {
-        CountingEngine()
+    var selectedTarget by remember {
+        mutableStateOf(CardTarget.PLAYER)
     }
 
     MaterialTheme {
@@ -76,9 +87,11 @@ fun BlackjackCountTrainerApp() {
 
                 ShoeSetupScreen(
                     selectedDecks = selectedDecks,
-                    onDeckSelected = {
-                        selectedDecks = it
+
+                    onDeckSelected = { decks ->
+                        selectedDecks = decks
                     },
+
                     onStart = {
 
                         selectedDecks?.let { decks ->
@@ -89,6 +102,9 @@ fun BlackjackCountTrainerApp() {
                             playerCards = emptyList()
                             dealerCards = emptyList()
 
+                            selectedTarget =
+                                CardTarget.PLAYER
+
                             shoeStarted = true
                         }
                     }
@@ -96,73 +112,112 @@ fun BlackjackCountTrainerApp() {
 
             } else {
 
-                TrackerScreen(
-                    decks = selectedDecks ?: 1,
-                    runningCount = countState.runningCount,
-                    trueCount = countState.trueCount,
-                    cardsSeen = countState.cardsSeen,
-                    cardsRemaining = countState.cardsRemaining,
-                    decksRemaining = countState.decksRemaining,
+                val state = countState
 
-                    playerCards = playerCards,
-                    dealerCards = dealerCards,
+                if (state != null) {
 
-                    onCardSelected = { card ->
+                    TrackerScreen(
 
-                        /*
-                         * Cards are only added to the
-                         * current hand here.
-                         *
-                         * Counting happens when
-                         * END HAND is pressed.
-                         */
-                        if (playerCards.size <= dealerCards.size) {
-                            playerCards =
-                                playerCards + card
-                        } else {
-                            dealerCards =
-                                dealerCards + card
+                        runningCount =
+                            state.runningCount,
+
+                        trueCount =
+                            state.trueCount,
+
+                        cardsSeen =
+                            state.cardsSeen,
+
+                        cardsRemaining =
+                            state.cardsRemaining,
+
+                        decksRemaining =
+                            state.decksRemaining,
+
+                        playerCards =
+                            playerCards,
+
+                        dealerCards =
+                            dealerCards,
+
+                        selectedTarget =
+                            selectedTarget,
+
+                        onTargetChanged = { target ->
+                            selectedTarget = target
+                        },
+
+                        onCardSelected = { card ->
+
+                            if (selectedTarget ==
+                                CardTarget.PLAYER
+                            ) {
+
+                                playerCards =
+                                    playerCards + card
+
+                            } else {
+
+                                dealerCards =
+                                    dealerCards + card
+                            }
+                        },
+
+                        onEndHand = {
+
+                            val exposedCards =
+                                playerCards + dealerCards
+
+                            /*
+                             * Only now does the shoe
+                             * officially receive the cards.
+                             */
+                            countState =
+                                engine.applyHand(
+                                    state,
+                                    exposedCards
+                                )
+
+                            playerCards = emptyList()
+                            dealerCards = emptyList()
+
+                            selectedTarget =
+                                CardTarget.PLAYER
+                        },
+
+                        onClearHand = {
+
+                            playerCards = emptyList()
+                            dealerCards = emptyList()
+
+                            selectedTarget =
+                                CardTarget.PLAYER
+                        },
+
+                        onNewShoe = {
+
+                            /*
+                             * New shoe means the user MUST
+                             * select the deck count again.
+                             */
+                            selectedDecks = null
+                            countState = null
+
+                            playerCards = emptyList()
+                            dealerCards = emptyList()
+
+                            selectedTarget =
+                                CardTarget.PLAYER
+
+                            shoeStarted = false
                         }
-                    },
-
-                    onEndHand = {
-
-                        val exposedCards =
-                            playerCards + dealerCards
-
-                        countState =
-                            engine.applyHand(
-                                countState,
-                                exposedCards
-                            )
-
-                        playerCards = emptyList()
-                        dealerCards = emptyList()
-                    },
-
-                    onClearHand = {
-                        playerCards = emptyList()
-                        dealerCards = emptyList()
-                    },
-
-                    onNewShoe = {
-
-                        selectedDecks = null
-                        shoeStarted = false
-
-                        playerCards = emptyList()
-                        dealerCards = emptyList()
-
-                        countState =
-                            engine.createNewShoe(1)
-                    }
-                )
+                    )
+                }
             }
         }
     }
 }
 
-@androidx.compose.runtime.Composable
+@Composable
 fun ShoeSetupScreen(
     selectedDecks: Int?,
     onDeckSelected: (Int) -> Unit,
@@ -183,19 +238,23 @@ fun ShoeSetupScreen(
 
         Text(
             text = "BLACKJACK",
-            style = MaterialTheme.typography.headlineLarge
+            style =
+                MaterialTheme.typography.headlineLarge
         )
 
         Text(
             text = "COUNT TRAINER",
-            style = MaterialTheme.typography.titleLarge
+            style =
+                MaterialTheme.typography.titleLarge
         )
 
         Spacer(
             modifier = Modifier.height(32.dp)
         )
 
-        Text("SELECT SHOE SIZE")
+        Text(
+            text = "SELECT SHOE SIZE"
+        )
 
         Spacer(
             modifier = Modifier.height(16.dp)
@@ -221,8 +280,8 @@ fun ShoeSetupScreen(
                 Text(
                     text =
                         "$decks Deck" +
-                                if (decks > 1) "s"
-                                else ""
+                            if (decks > 1) "s"
+                            else ""
                 )
             }
         }
@@ -236,7 +295,9 @@ fun ShoeSetupScreen(
             onClick = onStart
         ) {
 
-            Text("START SHOE")
+            Text(
+                text = "START SHOE"
+            )
         }
     }
 }
