@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.doctordhruv.blackjackcounttrainer"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.doctordhruv.blackjackcounttrainer"
