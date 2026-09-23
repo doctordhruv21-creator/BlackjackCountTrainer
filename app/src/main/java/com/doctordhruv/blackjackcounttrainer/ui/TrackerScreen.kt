@@ -1,23 +1,32 @@
 package com.doctordhruv.blackjackcounttrainer.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.doctordhruv.blackjackcounttrainer.model.Card
+import androidx.compose.ui.unit.sp
+import com.doctordhruv.blackjackcounttrainer.engine.BetRecommendation
 
 @Composable
 fun TrackerScreen(
@@ -26,172 +35,433 @@ fun TrackerScreen(
     cardsSeen: Int,
     cardsRemaining: Int,
     decksRemaining: Double,
-    playerCards: List<Card>,
-    dealerCards: List<Card>,
+    playerCount: Int,
+    playerCardsCount: Int,
+    dealerCount: Int,
+    dealerCardsCount: Int,
     selectedTarget: CardTarget,
+    betRecommendation: BetRecommendation,
     onTargetChanged: (CardTarget) -> Unit,
-    onCardSelected: (Card) -> Unit,
+    onCountSelected: (Int) -> Unit,
     onEndHand: () -> Unit,
     onClearHand: () -> Unit,
     onNewShoe: () -> Unit
 ) {
 
     Column(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F172A))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-        Text("BLACKJACK COUNT TRAINER")
+        // HEADER
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "BLACKJACK",
+                color = Color.White,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "COUNT TRAINER",
+                color = Color(0xFF94A3B8),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 2.sp
+            )
+        }
 
-        Text("Running Count: $runningCount")
-        Text("True Count: %.2f".format(trueCount))
-        Text("Cards Seen: $cardsSeen")
-        Text("Cards Remaining: $cardsRemaining")
-        Text("Decks Remaining: %.2f".format(decksRemaining))
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text("PLAYER")
-
-        CardRow(playerCards)
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text("DEALER")
-
-        CardRow(dealerCards)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
+        // COUNT DASHBOARD
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
-            Button(
-                onClick = {
-                    onTargetChanged(CardTarget.PLAYER)
+            StatCard(
+                modifier = Modifier.weight(1f),
+                title = "RUNNING COUNT",
+                value = if (runningCount >= 0) {
+                    "+$runningCount"
+                } else {
+                    "$runningCount"
                 }
-            ) {
-                Text(
-                    if (selectedTarget == CardTarget.PLAYER)
-                        "✓ PLAYER"
-                    else
-                        "PLAYER"
-                )
-            }
+            )
 
-            Button(
-                onClick = {
-                    onTargetChanged(CardTarget.DEALER)
+            StatCard(
+                modifier = Modifier.weight(1f),
+                title = "TRUE COUNT",
+                value = if (trueCount >= 0) {
+                    "+%.2f".format(trueCount)
+                } else {
+                    "%.2f".format(trueCount)
                 }
+            )
+        }
+
+        // BET CARD
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF064E3B)
+            )
+        ) {
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Text(
-                    if (selectedTarget == CardTarget.DEALER)
-                        "✓ DEALER"
-                    else
-                        "DEALER"
+                    text = "RECOMMENDED BET",
+                    color = Color(0xFFA7F3D0),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.5.sp
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = "₹${betRecommendation.amount}",
+                    color = Color.White,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "${betRecommendation.units} UNIT" +
+                            if (betRecommendation.units > 1) "S" else "",
+                    color = Color(0xFFA7F3D0),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // CURRENT HAND
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1E293B)
+            )
+        ) {
 
-        Text("SELECT CARD")
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
 
-        Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "CURRENT HAND",
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
 
-        CardGrid(
-            onCardSelected = onCardSelected
+                HandCountRow(
+                    title = "PLAYER",
+                    count = playerCount,
+                    cards = playerCardsCount
+                )
+
+                HorizontalDivider(
+                    color = Color(0xFF334155)
+                )
+
+                HandCountRow(
+                    title = "DEALER",
+                    count = dealerCount,
+                    cards = dealerCardsCount
+                )
+            }
+        }
+
+        // TARGET
+        Text(
+            text = "ADD CARD TO",
+            color = Color(0xFFCBD5E1),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+
+            TargetButton(
+                modifier = Modifier.weight(1f),
+                text = "PLAYER",
+                selected = selectedTarget == CardTarget.PLAYER,
+                onClick = {
+                    onTargetChanged(CardTarget.PLAYER)
+                }
+            )
+
+            TargetButton(
+                modifier = Modifier.weight(1f),
+                text = "DEALER",
+                selected = selectedTarget == CardTarget.DEALER,
+                onClick = {
+                    onTargetChanged(CardTarget.DEALER)
+                }
+            )
+        }
+
+        // CARD GROUPS
+        Text(
+            text = "SELECT CARD GROUP",
+            color = Color(0xFFCBD5E1),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
+        )
+
+        CountButton(
+            modifier = Modifier.fillMaxWidth(),
+            cards = "2   3   4   5   6",
+            count = "+1",
+            subtitle = "LOW CARDS",
+            backgroundColor = Color(0xFF166534),
+            onClick = {
+                onCountSelected(1)
+            }
+        )
+
+        CountButton(
+            modifier = Modifier.fillMaxWidth(),
+            cards = "7   8   9",
+            count = "0",
+            subtitle = "NEUTRAL CARDS",
+            backgroundColor = Color(0xFF155E75),
+            onClick = {
+                onCountSelected(0)
+            }
+        )
+
+        CountButton(
+            modifier = Modifier.fillMaxWidth(),
+            cards = "10   J   Q   K   A",
+            count = "−1",
+            subtitle = "HIGH CARDS",
+            backgroundColor = Color(0xFF991B1B),
+            onClick = {
+                onCountSelected(-1)
+            }
+        )
+
+        // ACTIONS
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
             OutlinedButton(
-                onClick = onClearHand
+                modifier = Modifier.weight(1f),
+                onClick = onClearHand,
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("CLEAR")
             }
 
             Button(
+                modifier = Modifier.weight(1f),
+                enabled = playerCardsCount > 0 &&
+                        dealerCardsCount > 0,
                 onClick = onEndHand,
-                enabled = playerCards.isNotEmpty() &&
-                        dealerCards.isNotEmpty()
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("END HAND")
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
         OutlinedButton(
+            modifier = Modifier.fillMaxWidth(),
             onClick = onNewShoe,
-            modifier = Modifier.fillMaxWidth()
+            shape = RoundedCornerShape(14.dp)
         ) {
             Text("NEW SHOE")
         }
+
+        // SHOE INFO
+        Text(
+            text = "$cardsSeen cards seen  •  " +
+                    "$cardsRemaining remaining  •  " +
+                    "%.2f decks remaining".format(decksRemaining),
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            color = Color(0xFF64748B),
+            fontSize = 11.sp
+        )
     }
 }
 
 @Composable
-private fun CardGrid(
-    onCardSelected: (Card) -> Unit
+private fun StatCard(
+    modifier: Modifier,
+    title: String,
+    value: String
 ) {
 
-    Column {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1E293B)
+        )
+    ) {
 
-        Card.entries.toList().chunked(5).forEach { rowCards ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
+            Text(
+                text = title,
+                color = Color(0xFF94A3B8),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                textAlign = TextAlign.Center
+            )
 
-                rowCards.forEach { card ->
+            Spacer(modifier = Modifier.height(4.dp))
 
-                    Button(
-                        onClick = {
-                            onCardSelected(card)
-                        },
-                        modifier = Modifier.width(62.dp)
-                    ) {
-                        Text(card.label)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = value,
+                color = Color(0xFF38BDF8),
+                fontSize = 27.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
 
 @Composable
-private fun CardRow(
-    cards: List<Card>
+private fun HandCountRow(
+    title: String,
+    count: Int,
+    cards: Int
 ) {
 
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
-        items(cards) { card ->
+        Text(
+            text = title,
+            modifier = Modifier.weight(1f),
+            color = Color(0xFFCBD5E1),
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
+        )
 
-            Card {
+        Text(
+            text = if (count >= 0) "+$count" else "$count",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp
+        )
+
+        Text(
+            text = "  •  $cards card" +
+                    if (cards == 1) "" else "s",
+            color = Color(0xFF64748B),
+            fontSize = 11.sp
+        )
+    }
+}
+
+@Composable
+private fun TargetButton(
+    modifier: Modifier,
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+
+    Button(
+        modifier = modifier,
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (selected) {
+                Color(0xFF0EA5E9)
+            } else {
+                Color(0xFF334155)
+            },
+            contentColor = Color.White
+        )
+    ) {
+
+        Text(
+            text = if (selected) "✓ $text" else text,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun CountButton(
+    modifier: Modifier,
+    cards: String,
+    count: String,
+    subtitle: String,
+    backgroundColor: Color,
+    onClick: () -> Unit
+) {
+
+    Button(
+        modifier = modifier.height(70.dp),
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = backgroundColor,
+            contentColor = Color.White
+        )
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
 
                 Text(
-                    text = card.label,
-                    modifier = Modifier.padding(
-                        horizontal = 14.dp,
-                        vertical = 10.dp
-                    )
+                    text = cards,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = subtitle,
+                    fontSize = 10.sp,
+                    letterSpacing = 1.sp
                 )
             }
+
+            Text(
+                text = count,
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
