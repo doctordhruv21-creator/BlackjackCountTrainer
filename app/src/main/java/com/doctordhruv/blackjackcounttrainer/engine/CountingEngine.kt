@@ -1,7 +1,5 @@
 package com.doctordhruv.blackjackcounttrainer.engine
 
-import com.doctordhruv.blackjackcounttrainer.model.Card
-
 data class CountState(
     val totalCards: Int = 0,
     val cardsSeen: Int = 0,
@@ -35,19 +33,22 @@ class CountingEngine {
 
     fun applyHand(
         state: CountState,
-        cards: List<Card>
+        countChange: Int,
+        cardsCount: Int
     ): CountState {
 
+        require(cardsCount >= 0) {
+            "Card count cannot be negative."
+        }
+
         require(
-            state.cardsSeen + cards.size <= state.totalCards
+            state.cardsSeen + cardsCount <= state.totalCards
         ) {
             "More cards entered than available in the shoe."
         }
 
-        val countChange = cards.sumOf { it.hiLoValue }
-
         return state.copy(
-            cardsSeen = state.cardsSeen + cards.size,
+            cardsSeen = state.cardsSeen + cardsCount,
             runningCount = state.runningCount + countChange
         )
     }
