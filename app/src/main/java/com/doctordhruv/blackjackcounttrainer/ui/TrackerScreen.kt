@@ -8,14 +8,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,31 +54,44 @@ fun TrackerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0F172A))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .verticalScroll(rememberScrollState())
+            .navigationBarsPadding()
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 12.dp,
+                bottom = 20.dp
+            ),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
 
+        // ─────────────────────────────
         // HEADER
+        // ─────────────────────────────
+
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = "BLACKJACK",
                 color = Color.White,
-                fontSize = 26.sp,
+                fontSize = 25.sp,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
                 text = "COUNT TRAINER",
                 color = Color(0xFF94A3B8),
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 letterSpacing = 2.sp
             )
         }
 
-        // COUNT DASHBOARD
+        // ─────────────────────────────
+        // COUNT CARDS
+        // ─────────────────────────────
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -103,7 +118,10 @@ fun TrackerScreen(
             )
         }
 
-        // BET CARD
+        // ─────────────────────────────
+        // BET
+        // ─────────────────────────────
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -115,24 +133,22 @@ fun TrackerScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(18.dp),
+                    .padding(vertical = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
                 Text(
                     text = "RECOMMENDED BET",
                     color = Color(0xFFA7F3D0),
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.5.sp
                 )
 
-                Spacer(modifier = Modifier.height(2.dp))
-
                 Text(
                     text = "₹${betRecommendation.amount}",
                     color = Color.White,
-                    fontSize = 34.sp,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
 
@@ -140,13 +156,16 @@ fun TrackerScreen(
                     text = "${betRecommendation.units} UNIT" +
                             if (betRecommendation.units > 1) "S" else "",
                     color = Color(0xFFA7F3D0),
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
 
+        // ─────────────────────────────
         // CURRENT HAND
+        // ─────────────────────────────
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -156,8 +175,8 @@ fun TrackerScreen(
         ) {
 
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.padding(15.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
                 Text(
@@ -186,11 +205,14 @@ fun TrackerScreen(
             }
         }
 
+        // ─────────────────────────────
         // TARGET
+        // ─────────────────────────────
+
         Text(
             text = "ADD CARD TO",
             color = Color(0xFFCBD5E1),
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp
         )
@@ -219,11 +241,14 @@ fun TrackerScreen(
             )
         }
 
+        // ─────────────────────────────
         // CARD GROUPS
+        // ─────────────────────────────
+
         Text(
             text = "SELECT CARD GROUP",
             color = Color(0xFFCBD5E1),
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp
         )
@@ -261,7 +286,10 @@ fun TrackerScreen(
             }
         )
 
-        // ACTIONS
+        // ─────────────────────────────
+        // HAND CONTROLS
+        // ─────────────────────────────
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -286,6 +314,10 @@ fun TrackerScreen(
             }
         }
 
+        // ─────────────────────────────
+        // NEW SHOE
+        // ─────────────────────────────
+
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = onNewShoe,
@@ -294,12 +326,17 @@ fun TrackerScreen(
             Text("NEW SHOE")
         }
 
+        // ─────────────────────────────
         // SHOE INFO
+        // ─────────────────────────────
+
         Text(
             text = "$cardsSeen cards seen  •  " +
                     "$cardsRemaining remaining  •  " +
                     "%.2f decks remaining".format(decksRemaining),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 2.dp),
             textAlign = TextAlign.Center,
             color = Color(0xFF64748B),
             fontSize = 11.sp
@@ -325,20 +362,20 @@ private fun StatCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             Text(
                 text = title,
                 color = Color(0xFF94A3B8),
-                fontSize = 10.sp,
+                fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(3.dp))
 
             Text(
                 text = value,
@@ -426,9 +463,9 @@ private fun CountButton(
 ) {
 
     Button(
-        modifier = modifier.height(70.dp),
+        modifier = modifier.height(66.dp),
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(17.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
             contentColor = Color.White
@@ -446,20 +483,20 @@ private fun CountButton(
 
                 Text(
                     text = cards,
-                    fontSize = 19.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
 
                 Text(
                     text = subtitle,
-                    fontSize = 10.sp,
+                    fontSize = 9.sp,
                     letterSpacing = 1.sp
                 )
             }
 
             Text(
                 text = count,
-                fontSize = 25.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
         }
