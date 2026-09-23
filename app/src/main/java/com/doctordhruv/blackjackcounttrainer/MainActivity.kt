@@ -25,9 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.doctordhruv.blackjackcounttrainer.engine.BetSizing
 import com.doctordhruv.blackjackcounttrainer.engine.CountingEngine
 import com.doctordhruv.blackjackcounttrainer.engine.CountState
-import com.doctordhruv.blackjackcounttrainer.model.Card
 import com.doctordhruv.blackjackcounttrainer.ui.CardTarget
 import com.doctordhruv.blackjackcounttrainer.ui.TrackerScreen
 
@@ -49,10 +49,6 @@ fun BlackjackCountTrainerApp() {
         CountingEngine()
     }
 
-    /*
-     * IMPORTANT:
-     * No deck count is selected by default.
-     */
     var selectedDecks by remember {
         mutableStateOf<Int?>(null)
     }
@@ -65,12 +61,22 @@ fun BlackjackCountTrainerApp() {
         mutableStateOf<CountState?>(null)
     }
 
-    var playerCards by remember {
-        mutableStateOf<List<Card>>(emptyList())
+    // Current hand count contribution
+    var playerCount by remember {
+        mutableStateOf(0)
     }
 
-    var dealerCards by remember {
-        mutableStateOf<List<Card>>(emptyList())
+    var dealerCount by remember {
+        mutableStateOf(0)
+    }
+
+    // Number of cards entered into each hand
+    var playerCardsCount by remember {
+        mutableStateOf(0)
+    }
+
+    var dealerCardsCount by remember {
+        mutableStateOf(0)
     }
 
     var selectedTarget by remember {
@@ -99,8 +105,11 @@ fun BlackjackCountTrainerApp() {
                             countState =
                                 engine.createNewShoe(decks)
 
-                            playerCards = emptyList()
-                            dealerCards = emptyList()
+                            playerCount = 0
+                            dealerCount = 0
+
+                            playerCardsCount = 0
+                            dealerCardsCount = 0
 
                             selectedTarget =
                                 CardTarget.PLAYER
@@ -115,6 +124,11 @@ fun BlackjackCountTrainerApp() {
                 val state = countState
 
                 if (state != null) {
+
+                    val betRecommendation =
+                        BetSizing.recommendation(
+                            state.trueCount
+                        )
 
                     TrackerScreen(
 
@@ -133,52 +147,68 @@ fun BlackjackCountTrainerApp() {
                         decksRemaining =
                             state.decksRemaining,
 
-                        playerCards =
-                            playerCards,
+                        playerCount =
+                            playerCount,
 
-                        dealerCards =
-                            dealerCards,
+                        playerCardsCount =
+                            playerCardsCount,
+
+                        dealerCount =
+                            dealerCount,
+
+                        dealerCardsCount =
+                            dealerCardsCount,
 
                         selectedTarget =
                             selectedTarget,
+
+                        betRecommendation =
+                            betRecommendation,
 
                         onTargetChanged = { target ->
                             selectedTarget = target
                         },
 
-                        onCardSelected = { card ->
+                        onCountSelected = { countValue ->
 
-                            if (selectedTarget ==
+                            if (
+                                selectedTarget ==
                                 CardTarget.PLAYER
                             ) {
 
-                                playerCards =
-                                    playerCards + card
+                                playerCount += countValue
+                                playerCardsCount += 1
 
                             } else {
 
-                                dealerCards =
-                                    dealerCards + card
+                                dealerCount += countValue
+                                dealerCardsCount += 1
                             }
                         },
 
                         onEndHand = {
 
-                            val exposedCards =
-                                playerCards + dealerCards
+                            val totalHandCount =
+                                playerCount + dealerCount
 
-                            /*
-                             * Only now does the shoe
-                             * officially receive the cards.
-                             */
+                            val totalCards =
+                                playerCardsCount +
+                                        dealerCardsCount
+
                             countState =
                                 engine.applyHand(
-                                    state,
-                                    exposedCards
+                                    state = state,
+                                    countChange =
+                                        totalHandCount,
+                                    cardsCount =
+                                        totalCards
                                 )
 
-                            playerCards = emptyList()
-                            dealerCards = emptyList()
+                            playerCount = 0
+                            dealerCount = 0
+
+                            playerCardsCount = 0
+                            dealerCardsCount = 0
 
                             selectedTarget =
                                 CardTarget.PLAYER
@@ -186,8 +216,11 @@ fun BlackjackCountTrainerApp() {
 
                         onClearHand = {
 
-                            playerCards = emptyList()
-                            dealerCards = emptyList()
+                            playerCount = 0
+                            dealerCount = 0
+
+                            playerCardsCount = 0
+                            dealerCardsCount = 0
 
                             selectedTarget =
                                 CardTarget.PLAYER
@@ -195,15 +228,14 @@ fun BlackjackCountTrainerApp() {
 
                         onNewShoe = {
 
-                            /*
-                             * New shoe means the user MUST
-                             * select the deck count again.
-                             */
                             selectedDecks = null
                             countState = null
 
-                            playerCards = emptyList()
-                            dealerCards = emptyList()
+                            playerCount = 0
+                            dealerCount = 0
+
+                            playerCardsCount = 0
+                            dealerCardsCount = 0
 
                             selectedTarget =
                                 CardTarget.PLAYER
@@ -280,8 +312,10 @@ fun ShoeSetupScreen(
                 Text(
                     text =
                         "$decks Deck" +
-                            if (decks > 1) "s"
-                            else ""
+                                if (decks > 1)
+                                    "s"
+                                else
+                                    ""
                 )
             }
         }
